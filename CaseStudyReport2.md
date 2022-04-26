@@ -11,11 +11,11 @@
 - [Experements](#experements)
     - [Topology Description and Benefits](#topology-description-and-benefits)
     - [Link Breakage from Spine to Leaf and from Leaf to ToR](#link-breakage-from-spine-to-leaf-and-from-leaf-to-tor---experement)
-    - [Inter & Intra Pod Travel Time](#inter--intra-pod-travel-time---experement)
+    - [Inter & Intra Pod Travel Time With ECMP](#inter--intra-pod-travel-time-with-ecmp---experiment)
     - [ECMP Load Balancing Eficiency](#ecmp-load-balancing-eficiency---experemint)
 - [Results](#results)
     - [Link Breakage from Spine to Leaf and from Leaf to ToR](#link-breakage-from-spine-to-leaf-and-from-leaf-to-tor---result)
-    - [Inter & Intra Pod Travel Time](#inter--intra-pod-travel-time---result)
+    - [Inter & Intra Pod Travel Time With ECMP](#inter--intra-pod-travel-time-with-ecmp---result)
     - [ECMP Load Balancing Eficiency](#ecmp-load-balancing-eficiency---result)
 - [Discussion of results](#discussion-of-results)
 - [Critical Summary](#critical-summary)
@@ -76,7 +76,7 @@ Full Mesh is a term to refers to the total interconnection of all nodes in a net
 ### *Leaf*
 | Host Name | Interface 1(E1/1) | Mask | Interface 2(E1/2) | Mask | Interface 3(E1/3) | Mask | Interface 4(E1/4) | Mask | Interface 5(E1/5) | Mask | AS # |
 | :--- | ---: | :--- | ---: | :--- | ---: | :--- | ---: | :--- | ---: | :--- | :---: |
-| N-1_P-1_L-1 | 1.1.1.2 | /30 | 1.1.1.26 | /30 | 2.1.1.1 | /30 | 2.1.2.1 | /30 | 2.1.3.1 | /30 | 216 |
+| N-1_P-1_L-1 | 1.1.1.2 | /30 | 1.1.1.26 | /30 | 2.1.1.1 | /30 | 2.1.3.1 | /30 | 2.1.2.1 | /30 | 216 |
 | N-1_P-1_L-2 | 1.1.1.14 | /30 | 1.1.1.38 | /30 | 2.2.3.1 | /30 | 2.2.1.1 | /30 | 2.2.2.1 | /30 | 232 |
 | N-1_P-2_L-3 | 1.1.1.6 | /30 | 1.1.1.30 | /30 | 2.3.4.1 | /30 | 2.3.6.1 | /30 | 2.3.5.1 | /30 | 248 |
 | N-1_P-2_L-4 | 1.1.1.18 | /30 | 1.1.1.42 | /30 | 2.4.6.1 | /30 | 2.4.4.1 | /30 | 2.4.5.1 | /30 | 264 |
@@ -109,7 +109,7 @@ One of the main features of a meshed topology and BGP is to be able to re-establ
 <br>
 <br>
 
-## Inter & Intra Pod Travel Time - Experiment -          
+## Inter & Intra Pod Travel Time With ECMP - Experiment -          
 For this experement, we generated 5 minutes worth of traffic and graphed it by tcp.analysis.ack_rtt on wireshark. We did this once from one pod to the other in other words inter pod traffic, then between two hosts in one pod or Intra pod traffic. This will show if there are any performance losses due to the spine.
 
 **To-Re-Work**
@@ -149,7 +149,7 @@ For this experement, we generated 5 minutes worth of traffic and graphed it by t
 <br>
 <br>
 
-## Inter & Intra Pod Travel Time - Result -          
+## Inter & Intra Pod Travel Time With ECMP - Result -          
 <br>
 To-Do
 <br>
