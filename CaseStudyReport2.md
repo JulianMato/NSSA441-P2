@@ -129,22 +129,17 @@ For this experement, we generated 5 minutes worth of traffic and graphed it by t
 <br>            
 <br>        
 
-| Location | Time of Disconnect | Time of Re-connect | Convergence Time |
+| Location | Time of Disconnect (sec) | Time of Re-connect (sec) | Convergence Time (sec) |
 | :--: | :--- | :--- | :---: |
-| Convergence 1 Back Bone pod1 → pod2 |  |  |  |
-| Convergence 2 Back Bone pod1 → pod2 |  |  |  |
-| Convergence 3 Back Bone pod1 → pod2 |  |  |  |
-| Convergence 4 Back Bone pod1 → pod2 |  |  |  |
+| Convergence 1 Back Bone pod1(H1) → pod2(H4) | 126.992597 | 160.439138 | 33.446541 |
+| Convergence 2 Back Bone pod1(H1) → pod2(H4) | 297.194200 | 330.621681 | 33.427481 |
+| Convergence 3 Back Bone pod1(H1) → pod2(H4) | 426.567166 | 455.925833 | 29.358667 |
+| Convergence 4 Back Bone pod1(H1) → pod2(H4) | 537.556812 | 573.020430 | 35.463618 |
 |  |  |  |  |
-| Convergence 1 ToR – Leaf pod1 → pod2 |  |  |  |
-| Convergence 2 ToR – Leaf pod1 → pod2 |  |  |  |
-| Convergence 3 ToR – Leaf pod1 → pod2 |  |  |  |
-| Convergence 4 ToR – Leaf pod1 → pod2 |  |  |  |
-|  |  |  |  |
-| Convergence 1 ToR – Leaf pod1 → pod1 |  |  |  |
-| Convergence 2 ToR – Leaf pod1 → pod1 |  |  |  |
-| Convergence 3 ToR – Leaf pod1 → pod1 |  |  |  |
-| Convergence 4 ToR – Leaf pod1 → pod1 |  |  |  |
+| Convergence 1 ToR – Leaf pod1(H1) → pod1(H3) | 30.045823 | 65.510711 | 30.045823 |
+| Convergence 2 ToR – Leaf pod1(H1) → pod1(H3) | 60.188155 | 90.583317 | 30.395162 |
+| Convergence 3 ToR – Leaf pod1(H1) → pod1(H3) | 52.741414 | 80.115344 | 27.37393 |
+| Convergence 4 ToR – Leaf pod1(H1) → pod1(H3) | 25.751042 | 52.085708 | 26.334666 |
 
 <br>
 <br>
@@ -156,7 +151,7 @@ To-Do
 <br>
 
 ![Figure 3](5min-capture-intra_pod "topology")\
-![Figure 3](5min-capture-inter_pod "topology")\
+
 <br>
 <br>
 
