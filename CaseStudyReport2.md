@@ -11,11 +11,11 @@
 - [Experements](#experements)
     - [Topology Description and Benefits](#topology-description-and-benefits)
     - [Link Breakage from Spine to Leaf and from Leaf to ToR](#link-breakage-from-spine-to-leaf-and-from-leaf-to-tor---experement)
-    - [Inter & Intra Pod Travel Time With ECMP](#inter--intra-pod-travel-time-with-ecmp---experiment)
+    - [RTT With BGP & ECMP](#rtt-with-bgp--ecmp---experiment)
     - [ECMP Load Balancing Eficiency](#ecmp-load-balancing-eficiency---experemint)
 - [Results](#results)
     - [Link Breakage from Spine to Leaf and from Leaf to ToR](#link-breakage-from-spine-to-leaf-and-from-leaf-to-tor---result)
-    - [Inter & Intra Pod Travel Time With ECMP](#inter--intra-pod-travel-time-with-ecmp---result)
+    - [RTT With BGP & ECMP](#rtt-with-bgp--ecmp---result)
     - [ECMP Load Balancing Eficiency](#ecmp-load-balancing-eficiency---result)
 - [Discussion of results](#discussion-of-results)
 - [Critical Summary](#critical-summary)
@@ -33,7 +33,7 @@
 
 # Technology Used:
 ## Clos & Fat Tree -
-Fat Tree(A subset of Clos topologies) relies heavily on route aggregation. more specifically as you see in figure 1 each level has a "thicker" connection than the last. Clos and therefore Fat Tree traditionally use a 2 or 3 tiered network structure with the "Spine" being at the top followed by "leafs" and in a 3 tiered Clos a final ToR layer. The Spine acts as the main distribution between otherwise isolated pods of systems. The leafs are the aggregation layer, they collect and truncate traffic from the ToR layer to pass it through to the Spine. Leaf layers are also responsible for any IP Sec or other security measures implemented by the system, this is crucial due to the need to keep the Spine as secure as possible. With the specialized nature of each layer relatively, specific hardware considerations have to be made, the Spine needs relatively few connections but needs massive bandwidth to handle the aggregated leaf layer traffic, leaf layers need a large number of ports to accommodate as many hosts or ToR's with a limited number of high-speed links to the Spine, and finally, the ToR layer only needs a large number of low-speed connections. By having all of your traffic aggregate adding new portions to the network is trivial giving Clos tremendous scalability while remaining structured and organized.
+Fat Tree(A subset of Clos topologies) relies heavily on route consolidation. more specifically as you see in figure 1 each level has a "thicker" connection than the last. Clos and therefore Fat Tree traditionally use a 2 or 3 tiered network structure with the "Spine" being at the top followed by "leafs" and in a 3 tiered Clos a final ToR layer. The Spine acts as the main distribution between otherwise isolated pods of systems. The leafs are the aggregation layer, they collect and truncate traffic from the ToR layer to pass it through to the Spine. Leaf layers are also responsible for any IP Sec or other security measures implemented by the system, this is crucial due to the need to keep the Spine as secure as possible. With the specialized nature of each layer relatively, specific hardware considerations have to be made, the Spine needs relatively few connections but needs massive bandwidth to handle the aggregated leaf layer traffic, leaf layers need a large number of ports to accommodate as many hosts or ToR's with a limited number of high-speed links to the Spine, and finally, the ToR layer only needs a large number of low-speed connections. By having all of your traffic aggregate adding new portions to the network is trivial giving Clos tremendous scalability while remaining structured and organized.
 
 ![Figure 1](Fat_tree_network.png "Fat Tree")
 <br>
@@ -52,7 +52,7 @@ Full Mesh is a term to refers to the total interconnection of all nodes in a net
 <br>
 
 ## ECMP Load Sharing -
-**To-Do**
+ECMP is a protocol that allows traffic to flow over multiple equal cost paths in one session. ECMP stands for Equal-Cost Multipath and is a routing technology that helps decide what next hop data should take. It is used to increase network speed and to utilize all of the links in a network instead of only a few key links. In our network we chose to hash the packets per destination IP and destination port. The hash is checked at the end of the journey to make sure that the hash is checked to make sure the packet/file is correctly delivered. A single TCP session will take the same link to get to a host but if another session is opened it can take a different path. ECMP keeps the traffic heading to the same destination IP and Port in the same link but if there is any traffic for another destination or the same destination but a different port it can send that traffic through a different link. Rotate is used so that the computer doesn't keep picking the same link to transmit over as computers are bad at true randomization. The rotate is a 64 bit stream that is cycled to make the selection more varied. since we have it set to 32 that means it starts at 32 and will cycle through with each packet, and the number will influence the link selected. The hashing seed will just help to add complexity to hashing and make sure that the hashing can't be spoofed. Load sharing mode is how we are load sharing and that could be by packet or by destination etc. we are load sharing by destination IP and destination port. That means as discussed earlier that if traffic has the same destination and port it will go through the same link but if other traffic is generated it will try and spread traffic through equal cost links. ECMP is not usually able to load balance between different ASs. There is a special command ("bestpath as-path multipath-relax") that enables it to go between different Autonomous systems in our BGP network. In our routing table if an entry has a line like this | in an entry it mean that there is ECMP to that link and that it will multipath to it.
 <br>
 <br>
 <br>
@@ -109,15 +109,13 @@ One of the main features of a meshed topology and BGP is to be able to re-establ
 <br>
 <br>
 
-## Inter & Intra Pod Travel Time With ECMP - Experiment -          
-For this experement, we generated 5 minutes worth of traffic and graphed it by tcp.analysis.ack_rtt on wireshark. We did this once from one pod to the other in other words inter pod traffic, then between two hosts in one pod or Intra pod traffic. This will show if there are any performance losses due to the spine.
-
-**To-Re-Work**
+## RTT With BGP & ECMP - Experiment -          
+In this experement we will test the speeed and stability of the network by extraplating the Round Trip Time(RTT) of a stream of trafic across two pods, The best outcome would be a low latency and stable connection with fiew to no spikes in RTT. Given that we are in a virtual environment with limited data transfer speeds and ocasional errors due to virtualization the best outcome is unlikly, wrather the mor likley outcome is that there will be an unusualy high RTT but it will retain a relatively stable connection speed. 
 <br>
 <br>
 
 ## ECMP Load Balancing Eficiency - Experemint -          
-**To-Do**
+The main feature of load sharing is its ability to spread the network load to multiple devices/paths. To visualise this there will be one host pinging two other host's on two other pods. If ECMP is working correctly each outgoing ICMP connection should be established on diffrent links, and each returning ACK should not be limited to the same path as the outgoing packets. 
 <br>
 <br>
 <br>
@@ -144,13 +142,13 @@ For this experement, we generated 5 minutes worth of traffic and graphed it by t
 <br>
 <br>
 
-## Inter & Intra Pod Travel Time With ECMP - Result -          
+## RTT With BGP & ECMP - Result -          
 <br>
-To-Do
+As expected 
 <br>
 <br>
 
-![Figure 3](5min-capture-intra_pod "topology")\
+![Figure 3](all-agregate-ttl.png "topology")\
 
 <br>
 <br>
