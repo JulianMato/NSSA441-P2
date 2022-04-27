@@ -8,16 +8,15 @@
     - [BGP & EBGP](#bgp--ebgp)
     - [Full Mesh & Partial Mesh](#full-mesh--partial-mesh)
     - [ECMP Load Sharing](#ecmp-load-sharing)
-- [Experements](#experements)
+- [Experiments](#experiments)
     - [Topology Description and Specifications](#topology-description-and-specifications)
-    - [Link Breakage from Spine to Leaf and from Leaf to ToR](#link-breakage-from-spine-to-leaf-and-from-leaf-to-tor---experement)
+    - [Link Breakage from Spine to Leaf and from Leaf to ToR](#link-breakage-from-spine-to-leaf-and-from-leaf-to-tor---experiment)
     - [RTT With BGP & ECMP](#rtt-with-bgp--ecmp---experiment)
-    - [ECMP Load Balancing Eficiency](#ecmp-load-balancing-eficiency---experemint)
+    - [ECMP Load Balancing Efficiency](#ecmp-load-balancing-efficiency---experiment)
 - [Results](#results)
     - [Link Breakage from Spine to Leaf and from Leaf to ToR](#link-breakage-from-spine-to-leaf-and-from-leaf-to-tor---result)
     - [RTT With BGP & ECMP](#rtt-with-bgp--ecmp---result)
-    - [ECMP Load Balancing Eficiency](#ecmp-load-balancing-eficiency---result)
-- [Discussion of results](#discussion-of-results)
+    - [ECMP Load Balancing Efficiency](#ecmp-load-balancing-efficiency---result)
 - [Critical Summary](#critical-summary)
 - [References](#references)
 - [Appendix](#appendix)
@@ -26,9 +25,7 @@
 <br>
 
 # Introduction:
-This paper will talk about the use of BGP deployed in a Clos topology for use in the data center. BGP or Border Gateway Protocol is a widely used routing protocol due to its stability and its "capability to support large and complex networks"(Zhang and Bartell, ch.1). |" To match the scalability of BGP an equally scalable topology must be used, "| this is where Clos steps in. Clos topology is relatively old being proposed more than 60 years ago and seeing extensive use in telephony and computing. In this paper, we will be using a variant of Clos commonly referred to as "Fat Tree". Fat Tree takes advantage of Clos network's massive expandability but introduces a strict hierarchy that aids in its deployment and maintenance. In parallel, the hierarchical form of Fat Tree aids in the design, implementation, and operation of BGP by giving it |" a highly structured network."|
-
-We will begin by taking a more in-depth look at Clos & Fat Tree, BGP & EBGP, along with Full Mesh & Partial Mesh. This will provide the baseline knowledge needed to understand the Experimental portion of the paper. The experimental portion begins with a description of the topology used and a few key tests and the procedure used to run them, followed by the results section which will lay out the results as factually and unbiased as possible. Following will be an interpretation of the data along with a critical look at the claims relative to the data. 
+This paper talks about the use of ECMP in a BGP Clos network. In this three tiered Clos topology developed with cisco nexus 9000s running NXOS v9.3.1 we ran BGP on it and added ECMP to it. ECMP is used here to help utilize under utilized resources and to almost double throughput. With the three tiered Clos With just BGP there are lots of redundant connections that aren't being utilized unless something breaks. The addition of ECMP allows the network to utilize the unused connections to increase throughput.
 <br>
 <br>
 <br>
@@ -37,7 +34,8 @@ We will begin by taking a more in-depth look at Clos & Fat Tree, BGP & EBGP, alo
 ## Clos & Fat Tree -
 Fat Tree(A subset of Clos topologies) relies heavily on route consolidation. more specifically as you see in figure 1 each level has a "thicker" connection than the last. Clos and therefore Fat Tree traditionally use a 2 or 3 tiered network structure with the "Spine" being at the top followed by "leafs" and in a 3 tiered Clos a final ToR layer. The Spine acts as the main distribution between otherwise isolated pods of systems. The leafs are the aggregation layer, they collect and truncate traffic from the ToR layer to pass it through to the Spine. Leaf layers are also responsible for any IP Sec or other security measures implemented by the system, this is crucial due to the need to keep the Spine as secure as possible. With the specialized nature of each layer relatively, specific hardware considerations have to be made, the Spine needs relatively few connections but needs massive bandwidth to handle the aggregated leaf layer traffic, leaf layers need a large number of ports to accommodate as many hosts or ToR's with a limited number of high-speed links to the Spine, and finally, the ToR layer only needs a large number of low-speed connections. By having all of your traffic aggregate adding new portions to the network is trivial giving Clos tremendous scalability while remaining structured and organized.
 
-![Figure 1](Fat_tree_network.png "Fat Tree")
+![Figure 1](Fat_tree_network.png "Fat Tree")        
+Figure-1
 <br>
 <br>
 
@@ -49,7 +47,8 @@ BGP "is the routing protocol that glues together the net-works forming the Inter
 ## Full Mesh & Partial Mesh -
 Full Mesh is a term to refers to the total interconnection of all nodes in a network as shown in figure 2. This allows for maximum points of redundancy in case of a link failure, for this reason, all the pods in a Clos or Fat Tree topology are interconnected. This is best practice in most networks, though it does bring with it some issues namely loops. A large issue with full mesh is the existence of loops in the network leaving the opportunity for packets to get lost in limbo slowing down the network and eventually crashing the machines tunning it. As to avoid this we have loop avoidance protocols but by adding another protocol to your network you are adding latency, and unfortunately the more links the longer convergence could take as the protocol searches for a new route. this can be mitigated by adding link state costs to narrow the decision tree but if done correctly in a 3 tier Clos topology the redundancy already present at the spine a partial mesh can be used while maintaining redundancy. Partial Mesh as it sounds only connects a portion of the systems together leaving a higher chance of failure unless accounted for though it does alleviate network complexity and convergence time at times.
 
-![Figure 2](NetworkTopology-FullyConnected.png "Full Mesh")
+![Figure 2](NetworkTopology-FullyConnected.png "Full Mesh")             
+Figure-2
 <br>
 <br>
 
@@ -59,7 +58,7 @@ ECMP is a protocol that allows traffic to flow over multiple equal cost paths in
 <br>
 <br>
 
-# Experements:
+# Experiments:
 
 ## Topology Description and Specifications -
 <br>
@@ -98,27 +97,26 @@ ECMP is a protocol that allows traffic to flow over multiple equal cost paths in
 | ToR-9 | 2.6.9.2 | /30 | 2.5.9.2 | /30 | 192.3.9.254 | /24 | 399 | 192.3.9.0/24 |             
 <br>
 
-![Figure 3](top.png "topology")\
+![Figure 3](top.png "topology")             
+Figure-3
 <br>
 <br>
 
 ## Link Breakage from Spine to Leaf and from Leaf to ToR - Experiment -              
-One of the main features of a meshed topology and BGP is to be able to re-establish connection after a broken link, so for this experiment, we will be testing that ability. To start large amounts of traffic will be generated from PoD-1(host-1) to PoD-1(host-3) and then from PoD-1(host-1) to PoD-2(host-4). Once the traffic starts to be generated a link is broken. The final packet sent is loged as the "Time of Disconnect" and once the connection is re-established the first newly received packet is logged as "Time of Re-connect". The diffrence between the two numbers should be an acurate convergence time. 
+One of the main features of a meshed topology and BGP is to be able to re-establish connection after a broken link, so for this experiment, we will be testing that ability. To start large amounts of traffic will be generated from PoD-1(host-1) to PoD-1(host-3) and then from PoD-1(host-1) to PoD-2(host-4). Once the traffic starts to be generated a link is broken. The final packet sent is logged as the "Time of Disconnect" and once the connection is re-established the first newly received packet is logged as "Time of Re-connect". The difference between the two numbers should be an accurate convergence time. 
 <br>
 
 In this topology EBGP is set to have a Hello timer interval of 10 sec and an LSA interval of 32 sec, an optimal convergence time would be 32 sec.
-
-**To-Re-Work**
 <br>
 <br>
 
 ## RTT With BGP & ECMP - Experiment -          
-In this experement we will test the speeed and stability of the network by extraplating the Round Trip Time(RTT) of a stream of trafic across two pods, The best outcome would be a low latency and stable connection with fiew to no spikes in RTT. Given that we are in a virtual environment with limited data transfer speeds and ocasional errors due to virtualization the best outcome is unlikly, wrather the mor likley outcome is that there will be an unusualy high RTT but it will retain a relatively stable connection speed. 
+In this experiment we will test the speed and stability of the network by extrapolating the Round Trip Time(RTT) of a stream of traffic across two pods, The best outcome would be a low latency and stable connection with few to no spikes in RTT. Given that we are in a virtual environment with limited data transfer speeds and occasional errors due to virtualization the best outcome is unlikely, rather the mor likely outcome is that there will be an unusually high RTT but it will retain a relatively stable connection speed. 
 <br>
 <br>
 
-## ECMP Load Balancing Eficiency - Experemint -          
-The main feature of load sharing is its ability to spread the network load to multiple devices/paths. To visualise this there will be one host pinging two other host's on two other pods. If ECMP is working correctly each outgoing ICMP connection should be established on diffrent links, and each returning ACK should not be limited to the same path as the outgoing packets. 
+## ECMP Load Balancing Efficiency - Experiment -          
+The main feature of load sharing is its ability to spread the network load to multiple devices/paths. To visualize this there will be one host pinging two other host's on two other pods. If ECMP is working correctly each outgoing ECMP connection should be established on different links, and each returning ACK should not be limited to the same path as the outgoing packets. 
 <br>
 <br>
 <br>
@@ -126,7 +124,7 @@ The main feature of load sharing is its ability to spread the network load to mu
 # Results:
 
 ## Link Breakage from Spine to Leaf and from Leaf to ToR - Result -              
-As shown from the chart bellow the Convergence time varies from a Back-Bone <-> Leaf and a Leaf <-> ToR dissconnect by an average of 3 seconds. This though unexpected is not unresonable, having to send data through the two pods and the core makes the number of devices that need there routing tables updated to retain service are doubled compared to a single pod. On the other hand a sub 30 sec convergence time is very strange, my hypothosys is that in some way the link was broken between the sending of a hello msg and the response or ECMP found a new route before BGP could flood the networks routing tables.
+As shown from the chart bellow the Convergence time varies from a Back-Bone <-> Leaf and a Leaf <-> ToR disconnect by an average of 3 seconds. This though unexpected is not unreasonable, having to send data through the two pods and the core makes the number of devices that need there routing tables updated to retain service are doubled compared to a single pod. On the other hand a sub 30 sec convergence time is very strange, my hypotheses is that in some way the link was broken between the sending of a hello msg and the response or ECMP found a new route before BGP could flood the networks routing tables.
 <br>            
 <br>        
 
@@ -147,41 +145,49 @@ As shown from the chart bellow the Convergence time varies from a Back-Bone <-> 
 
 ## RTT With BGP & ECMP - Result -          
 <br>
-As expected there are many inconsistancies and outlyers but this data still shows a relative level of stability hovering around the same RTT for all packets of a given trial. The outlyers in trial four are so outlandish that its best just ignored as an inconsistency of vurtualization.
+As expected there are many inconsistencies and outliers but this data still shows a relative level of stability hovering around the same RTT for all packets of a given trial. The outliers in trial four are so outlandish that its best just ignored as an inconsistency of virtualization.
 <br>
 <br>
 
-![Figure 3](all-agregate-ttl.png "topology")\
+![Figure 3](all-agregate-ttl.png "topology")            
+Figure-4
 
 <br>
 <br>
 
-## ECMP Load Balancing Eficiency - Result -          
-**To-Do**
-
-||
-<br>
-<br>
+## ECMP Load Balancing Efficiency - Result -          
+As expected the host 192.1.1.1 sent 2 connections one to its pod(Pod-1) over ToR-1 which advertises 192.1.1.0/24 and an other to pod-2. In this instance, port-2 on ToR-1 was chosen to route the traffic to 192.1.3.1 which is located in the same pod as the host and is advertised on ToR-3, and ToR-1 port-1 was elected by ECMP to route to 192.2.4.1 which is advertised on ToR-4 located in Pod-2. Since ECMP is hashing the src IP and src port each connection established one route to and from the host and each destination. You can see this in action below, all 3 of the data sets are an aggregated tally of all packets sent on a specific capture by src IP address. The first dataset is the Host's(192.1.1.1). Since the host was pinging both destinations it sent 50% of the traffic 25% for 192.1.3.1 and 25% for 192.2.4.1. Since the host is sending an ECMP packet the destinations must respond, thus 192.2.4.1 and 192.1.3.1 each have roughly 25% presence. The other two captures are the diverging paths that the traffic followed, and again ECMP did its job perfectly separating the two connections and sending them to the most efficient link.
 <br>
 
-# Discussion of Results:           
-The results fell in line with what was expected of BGP and Clos. There were some outliers such as one data point in the convergence time experiment that managed to converge in 25 seconds which should not be possible due to the hello timer being 10 seconds, the conclusion was that there must have been a missed hello timer before the link was broken. Another interesting development is the relatively small impact traveling through the spine has on connection speed, it appears nearly negligible.      
-<br>
-With this data, it is easy to see the stability of this network even under a 98000 packet per minute load. Though some of the network degradations are probably attributable to the form of virtualization used for this topology (GNS3 with qemu). 
+*Capture at Host*
+| Src IP Addr | # of Packet's | Total % of Capture  |
+|:---|:---:|:---:|
+|192.2.4.1|327|25.04%|
+|192.1.3.1|326|24.96%|
+|192.1.1.1|653|50%|         
 
-**To-Re-Work**
+<br>
+
+*Capture at Tor-1 Port-1*
+| Src IP Addr | # of Packet's | Total % of Capture  |
+|:---|:---:|:---:|
+|192.2.4.1|331|50%|
+|192.1.1.1|331|50%|         
+
+<br>
+
+*Capture at Tor-1 Port-2*
+| Src IP Addr | # of Packet's | Total % of Capture  |
+|:---|:---:|:---:|
+|192.1.3.1|335|50%|
+|192.1.1.1|335|50%|         
 
 <br>
 <br>
 <br>
 
 # Critical Summary:            
-There are many advantages to BGP but unfortunately, it has one glaring flaw that was out of the scope of this paper, and that would be its security. The risk of AS leaks and the ease of trace routing a network makes BGP very risky. In a perfect world, the AS numbers would be unacceptable but unfortunately, it is not a question of if but of when.             
-<br>
-On top of the security issues, there is a lot of administration and organization needed to deploy BGP on this topology, obviously, in the context of a data center this is trivial but in a small to medium network, this is simply unreasonable. However when feasible this topology and protocol do compliment each other very well. 
-
-**To-Re-Work**
-
+There are many advantages to BGP especially when used in conjunction with ECMP, it has one glaring flaws that where out of the scope of this paper, and that would be its security. The risk of AS leaks and the ease of trace routing a network makes BGP very risky. In a perfect world, the AS numbers would be unacceptable but unfortunately, it is not a question of if but of when. On top of the security issues, there is a lot of administration and organization needed to deploy BGP on this topology, obviously, in the context of a data center this is trivial but in a small to medium network, this is simply unreasonable. However when feasible this topology and protocol do compliment each other very well. ECMP on the other hand gives any hot failover based topology a huge boost with little to no cost, though idyllic you do pay for ECMP in overhead. ECMP is not a simple protocol and having to do it at scale could end up with massive amounts of hashing operations. 
 <br>
 <br>
 <br>
@@ -200,7 +206,8 @@ https://www.cisco.com/c/en/us/td/docs/switches/datacenter/nexus9000/sw/93x/inter
 
 Figure 1 - By Jafet at English Wikipedia - Transferred from en.wikipedia to Commons., Public Domain, https://commons.wikimedia.org/w/index.php?curid=37953156          
 Figure 2 - Public Domain, https://commons.wikimedia.org/w/index.php?curid=991408                    
-Figure 3 - By Original: FoobazSVG: Rehua - This file was derived from: NetworkTopology-Mesh.png, Public Domain, https://commons.wikimedia.org/w/index.php?curid=31012050
+Figure 3 - Topology visualization with IP addresses
+Figure 4 - RTT's of 4 trial's
 
 <br>
 <br>
@@ -265,7 +272,7 @@ Figure 3 - By Original: FoobazSVG: Rehua - This file was derived from: NetworkTo
    <dt>Autonomous System Number</dt>
        <dd>A unique identifier for each router or layer 3 switch</dd><br>
    <dt>propagating</dt>
-       <dd>replicateing</dd><br>
+       <dd>replicating</dd><br>
    <dt>route change</dt>
        <dd>when the flow of traffic changes</dd><br>
    <dt>redundancy</dt>
@@ -292,5 +299,7 @@ Figure 3 - By Original: FoobazSVG: Rehua - This file was derived from: NetworkTo
        <dd>Network emulation software</dd><br>
    <dt>qemu</dt>
        <dd>virtualization software</dd><br>
+    <dt>ECMP</dt>
+       <dd>Equal Cost Multi Pathing</dd><br>
 <dl>
 
