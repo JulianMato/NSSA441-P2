@@ -1,5 +1,5 @@
 
-# <center>**BGP in the Datacenter**</center> <center> By Julian Mato-Hernandez & Evan Jurdan </center>
+# <center>**BGP with ECMP in the Datacenter**</center> <center> By Julian Mato-Hernandez & Evan Jurdan </center>
 
 # Table of Contents:
 - [Introduction](#introduction)
@@ -9,7 +9,7 @@
     - [Full Mesh & Partial Mesh](#full-mesh--partial-mesh)
     - [ECMP Load Sharing](#ecmp-load-sharing)
 - [Experements](#experements)
-    - [Topology Description and Benefits](#topology-description-and-benefits)
+    - [Topology Description and Specifications](#topology-description-and-specifications)
     - [Link Breakage from Spine to Leaf and from Leaf to ToR](#link-breakage-from-spine-to-leaf-and-from-leaf-to-tor---experement)
     - [RTT With BGP & ECMP](#rtt-with-bgp--ecmp---experiment)
     - [ECMP Load Balancing Eficiency](#ecmp-load-balancing-eficiency---experemint)
@@ -26,7 +26,9 @@
 <br>
 
 # Introduction:
-**To-Do**
+This paper will talk about the use of BGP deployed in a Clos topology for use in the data center. BGP or Border Gateway Protocol is a widely used routing protocol due to its stability and its "capability to support large and complex networks"(Zhang and Bartell, ch.1). |" To match the scalability of BGP an equally scalable topology must be used, "| this is where Clos steps in. Clos topology is relatively old being proposed more than 60 years ago and seeing extensive use in telephony and computing. In this paper, we will be using a variant of Clos commonly referred to as "Fat Tree". Fat Tree takes advantage of Clos network's massive expandability but introduces a strict hierarchy that aids in its deployment and maintenance. In parallel, the hierarchical form of Fat Tree aids in the design, implementation, and operation of BGP by giving it |" a highly structured network."|
+
+We will begin by taking a more in-depth look at Clos & Fat Tree, BGP & EBGP, along with Full Mesh & Partial Mesh. This will provide the baseline knowledge needed to understand the Experimental portion of the paper. The experimental portion begins with a description of the topology used and a few key tests and the procedure used to run them, followed by the results section which will lay out the results as factually and unbiased as possible. Following will be an interpretation of the data along with a critical look at the claims relative to the data. 
 <br>
 <br>
 <br>
@@ -59,9 +61,7 @@ ECMP is a protocol that allows traffic to flow over multiple equal cost paths in
 
 # Experements:
 
-## Topology Description and Benefits -
-**To-Do**
-<br>
+## Topology Description and Specifications -
 <br>
 
 ### *Spine*
@@ -98,12 +98,15 @@ ECMP is a protocol that allows traffic to flow over multiple equal cost paths in
 | ToR-9 | 2.6.9.2 | /30 | 2.5.9.2 | /30 | 192.3.9.254 | /24 | 399 | 192.3.9.0/24 |             
 <br>
 
-![Figure 3](img-top-fing.png "topology")\
+![Figure 3](top.png "topology")\
 <br>
 <br>
 
 ## Link Breakage from Spine to Leaf and from Leaf to ToR - Experiment -              
-One of the main features of a meshed topology and BGP is to be able to re-establish connection after a broken link, so for this experiment, we will be testing that ability. we start by generating large amounts of TCP and UDP traffic from K-Host-1 to K-Host-3 with the help of `nmap -p0-65535 192.2.1.1 -T5` and `nmap -sU -p- 192.2.1.1 -T5`. once the traffic starts to be generated we break a link. To begin with we broke 1.1.1.36/30 5 times followed by breaking link 2.1.1.8/30. K-Host-3 has a Wireshark capture running on it, we log when the traffic stops and when it re-establishes connection and take the difference. Since the hello packet interval is set to 10 seconds and the LSA interval is 32 seconds we should be looking at an average of 31 seconds till convergence.
+One of the main features of a meshed topology and BGP is to be able to re-establish connection after a broken link, so for this experiment, we will be testing that ability. To start large amounts of traffic will be generated from PoD-1(host-1) to PoD-1(host-3) and then from PoD-1(host-1) to PoD-2(host-4). Once the traffic starts to be generated a link is broken. The final packet sent is loged as the "Time of Disconnect" and once the connection is re-established the first newly received packet is logged as "Time of Re-connect". The diffrence between the two numbers should be an acurate convergence time. 
+<br>
+
+In this topology EBGP is set to have a Hello timer interval of 10 sec and an LSA interval of 32 sec, an optimal convergence time would be 32 sec.
 
 **To-Re-Work**
 <br>
@@ -123,16 +126,16 @@ The main feature of load sharing is its ability to spread the network load to mu
 # Results:
 
 ## Link Breakage from Spine to Leaf and from Leaf to ToR - Result -              
-**To-Do**
+As shown from the chart bellow the Convergence time varies from a Back-Bone <-> Leaf and a Leaf <-> ToR dissconnect by an average of 3 seconds. This though unexpected is not unresonable, having to send data through the two pods and the core makes the number of devices that need there routing tables updated to retain service are doubled compared to a single pod. On the other hand a sub 30 sec convergence time is very strange, my hypothosys is that in some way the link was broken between the sending of a hello msg and the response or ECMP found a new route before BGP could flood the networks routing tables.
 <br>            
 <br>        
 
 | Location | Time of Disconnect (sec) | Time of Re-connect (sec) | Convergence Time (sec) |
 | :--: | :--- | :--- | :---: |
-| Convergence 1 Back Bone pod1(H1) → pod2(H4) | 126.992597 | 160.439138 | 33.446541 |
-| Convergence 2 Back Bone pod1(H1) → pod2(H4) | 297.194200 | 330.621681 | 33.427481 |
-| Convergence 3 Back Bone pod1(H1) → pod2(H4) | 426.567166 | 455.925833 | 29.358667 |
-| Convergence 4 Back Bone pod1(H1) → pod2(H4) | 537.556812 | 573.020430 | 35.463618 |
+| Convergence 1 Back-Bone pod1(H1) → pod2(H4) | 126.992597 | 160.439138 | 33.446541 |
+| Convergence 2 Back-Bone pod1(H1) → pod2(H4) | 297.194200 | 330.621681 | 33.427481 |
+| Convergence 3 Back-Bone pod1(H1) → pod2(H4) | 426.567166 | 455.925833 | 29.358667 |
+| Convergence 4 Back-Bone pod1(H1) → pod2(H4) | 537.556812 | 573.020430 | 35.463618 |
 |  |  |  |  |
 | Convergence 1 ToR – Leaf pod1(H1) → pod1(H3) | 30.045823 | 65.510711 | 30.045823 |
 | Convergence 2 ToR – Leaf pod1(H1) → pod1(H3) | 60.188155 | 90.583317 | 30.395162 |
@@ -144,7 +147,7 @@ The main feature of load sharing is its ability to spread the network load to mu
 
 ## RTT With BGP & ECMP - Result -          
 <br>
-As expected 
+As expected there are many inconsistancies and outlyers but this data still shows a relative level of stability hovering around the same RTT for all packets of a given trial. The outlyers in trial four are so outlandish that its best just ignored as an inconsistency of vurtualization.
 <br>
 <br>
 
@@ -155,6 +158,8 @@ As expected
 
 ## ECMP Load Balancing Eficiency - Result -          
 **To-Do**
+
+||
 <br>
 <br>
 <br>
